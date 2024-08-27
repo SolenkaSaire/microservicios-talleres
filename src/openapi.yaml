@@ -1,0 +1,260 @@
+openapi: 3.0.0
+info:
+    title: User Taller API
+    version: 1.0.0
+    description: API for managing users, including registration, login, and CRUD operations.
+
+servers:
+    - url: http://localhost:3000/api
+
+paths:
+    /auth/login:
+        post:
+            summary: User login
+            description: Authenticates a user and returns a JWT token.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                    example: user@example.com
+                                password:
+                                    type: string
+                                    format: password
+                                    example: strongpassword123
+            responses:
+                "200":
+                    description: Successful login
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    token:
+                                        type: string
+                                        description: JWT token
+                                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                "401":
+                    description: Invalid credentials
+                "400":
+                    description: Bad request (e.g., missing email or password)
+
+    /auth/register:
+        post:
+            summary: User registration
+            description: Registers a new user in the system.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                username:
+                                    type: string
+                                    example: johndoe
+                                email:
+                                    type: string
+                                    format: email
+                                    example: johndoe@example.com
+                                password:
+                                    type: string
+                                    format: password
+                                    example: strongpassword123
+            responses:
+                "201":
+                    description: User created successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    id:
+                                        type: string
+                                        description: User ID
+                                        example: 60a7842f58d6c90d58f4e2b6
+                                    username:
+                                        type: string
+                                        example: johndoe
+                                    email:
+                                        type: string
+                                        format: email
+                                        example: johndoe@example.com
+                "400":
+                    description: Bad request (e.g., missing or invalid fields)
+                "409":
+                    description: Email or username already exists
+
+    /auth/recover-password:
+        post:
+            summary: Password recovery
+            description: Sends a password recovery email to the user.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                    example: user@example.com
+            responses:
+                "200":
+                    description: Recovery email sent
+                "404":
+                    description: User not found
+                "400":
+                    description: Bad request (e.g., missing or invalid email)
+
+    /users:
+        get:
+            summary: Get all users
+            description: Returns a list of all registered users.
+            responses:
+                "200":
+                    description: A list of users
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: string
+                                            example: 60a7842f58d6c90d58f4e2b6
+                                        username:
+                                            type: string
+                                            example: johndoe
+                                        email:
+                                            type: string
+                                            format: email
+                                            example: johndoe@example.com
+                "401":
+                    description: Unauthorized
+                "500":
+                    description: Internal server error
+
+        post:
+            summary: Create a new user
+            description: Registers a new user in the system.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                username:
+                                    type: string
+                                    example: johndoe
+                                email:
+                                    type: string
+                                    format: email
+                                    example: johndoe@example.com
+                                password:
+                                    type: string
+                                    format: password
+                                    example: strongpassword123
+            responses:
+                "201":
+                    description: User created successfully
+                "400":
+                    description: Bad request (e.g., missing or invalid fields)
+                "409":
+                    description: Email or username already exists
+
+    /users/{id}:
+        get:
+            summary: Get a user by ID
+            description: Returns a single user by their ID.
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                      example: 60a7842f58d6c90d58f4e2b6
+            responses:
+                "200":
+                    description: User found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    id:
+                                        type: string
+                                        example: 60a7842f58d6c90d58f4e2b6
+                                    username:
+                                        type: string
+                                        example: johndoe
+                                    email:
+                                        type: string
+                                        format: email
+                                        example: johndoe@example.com
+                "404":
+                    description: User not found
+                "400":
+                    description: Bad request (e.g., invalid ID format)
+
+        put:
+            summary: Update a user by ID
+            description: Updates user details by their ID.
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                      example: 60a7842f58d6c90d58f4e2b6
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                username:
+                                    type: string
+                                    example: johndoe_updated
+                                email:
+                                    type: string
+                                    format: email
+                                    example: johndoe_updated@example.com
+                                password:
+                                    type: string
+                                    format: password
+                                    example: newstrongpassword123
+            responses:
+                "200":
+                    description: User updated successfully
+                "404":
+                    description: User not found
+                "400":
+                    description: Bad request (e.g., invalid fields or ID)
+
+        delete:
+            summary: Delete a user by ID
+            description: Deletes a user from the system by their ID.
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                      example: 60a7842f58d6c90d58f4e2b6
+            responses:
+                "204":
+                    description: User deleted successfully
+                "404":
+                    description: User not found
+                "400":
+                    description: Bad request (e.g., invalid ID format)
