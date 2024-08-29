@@ -32,15 +32,6 @@ components:
                     type: string
                     format: password
                     example: strongpassword123
-                firstName:
-                    type: string
-                    example: John
-                lastName:
-                    type: string
-                    example: Doe
-                role:
-                    type: string
-                    example: user
             required:
                 - username
                 - email
@@ -59,15 +50,6 @@ components:
                     type: string
                     format: email
                     example: johndoe@example.com
-                firstName:
-                    type: string
-                    example: John
-                lastName:
-                    type: string
-                    example: Doe
-                role:
-                    type: string
-                    example: user
 
         UserUpdate:
             type: object
@@ -79,12 +61,6 @@ components:
                     type: string
                     format: email
                     example: johndoe_updated@example.com
-                firstName:
-                    type: string
-                    example: John
-                lastName:
-                    type: string
-                    example: Doe
 
         LoginRequest:
             type: object

@@ -1,8 +1,14 @@
 const express = require('express');
-const authController = require('../controllers/authController');
-
+const { register} = require('../controllers/authController'); // Verifica esta línea
 const router = express.Router();
 
-router.post('/login', authController.login);
+// Ruta de registro
+router.post('/register', register);
+
+// Ruta de inicio de sesión
+//router.post('/login', login);
+
+// Ruta de recuperación de contraseña
+//router.post('/password', recoverPassword);
 
 module.exports = router;
