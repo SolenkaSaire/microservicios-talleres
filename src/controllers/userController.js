@@ -1,50 +1,81 @@
 const userService = require('../services/userService');
-const responseUtil = require('../utils/responseUtil');
 
-exports.createUser = async (req, res) => {
+// Register a new user
+exports.registerUser = async (req, res) => {
   try {
     const user = await userService.createUser(req.body);
-    responseUtil.success(res, user, 201);
+    res.status(201).json(user);
   } catch (error) {
-    responseUtil.error(res, error.message, 400);
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
+// User login
+exports.loginUser = async (req, res) => {
+  try {
+    const token = await userService.login(req.body);
+    res.json({ token });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message });
+  }
+};
+
+// Password recovery
+exports.recoverPassword = async (req, res) => {
+  try {
+    const recoveryCode = await userService.recoverPassword(req.body.email);
+    res.json({ recoveryCode });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message });
+  }
+};
+
+// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await userService.getAllUsers();
-    responseUtil.success(res, users);
+    res.json(users);
   } catch (error) {
-    responseUtil.error(res, error.message, 400);
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
+// Get user by ID
 exports.getUserById = async (req, res) => {
   try {
     const user = await userService.getUserById(req.params.id);
-    if (!user) return responseUtil.error(res, 'User not found', 404);
-    responseUtil.success(res, user);
+    res.json(user);
   } catch (error) {
-    responseUtil.error(res, error.message, 400);
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
-exports.updateUser = async (req, res) => {
+// Update user by ID
+exports.updateUserById = async (req, res) => {
   try {
-    const user = await userService.updateUser(req.params.id, req.body);
-    if (!user) return responseUtil.error(res, 'User not found', 404);
-    responseUtil.success(res, user);
+    const user = await userService.updateUserById(req.params.id, req.body);
+    res.json(user);
   } catch (error) {
-    responseUtil.error(res, error.message, 400);
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
-exports.deleteUser = async (req, res) => {
+// Delete user by ID
+exports.deleteUserById = async (req, res) => {
   try {
-    const user = await userService.deleteUser(req.params.id);
-    if (!user) return responseUtil.error(res, 'User not found', 404);
-    responseUtil.success(res, { message: 'User deleted' });
+    await userService.deleteUserById(req.params.id);
+    res.status(204).send();
   } catch (error) {
-    responseUtil.error(res, error.message, 400);
+    res.status(error.statusCode || 500).json({ message: error.message });
+  }
+};
+
+// Partially update user by ID
+exports.partialUpdateUserById = async (req, res) => {
+  try {
+    const user = await userService.partialUpdateUserById(req.params.id, req.body);
+    res.json(user);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };

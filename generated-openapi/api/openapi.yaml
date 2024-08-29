@@ -1,0 +1,344 @@
+openapi: 3.0.0
+info:
+  title: User Taller API
+  description: "API for managing users, including registration, login, and CRUD operations."
+  version: 1.0.0
+servers:
+- url: http://localhost:3000/api
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns a JWT token.
+      operationId: authLoginPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "401":
+          description: Invalid credentials
+        "400":
+          description: "Bad request (e.g., missing email or password)"
+      x-swagger-router-controller: Default
+  /auth/register:
+    post:
+      summary: User registration
+      description: Registers a new user in the system.
+      operationId: authRegisterPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        "400":
+          description: "Bad request (e.g., missing or invalid fields)"
+        "409":
+          description: Email or username already exists
+      x-swagger-router-controller: Default
+  /auth/password:
+    post:
+      summary: Password recovery
+      description: Sends a password recovery email to the user.
+      operationId: authPasswordPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/auth_password_body'
+        required: true
+      responses:
+        "200":
+          description: Recovery email sent
+        "404":
+          description: User not found
+        "400":
+          description: "Bad request (e.g., missing or invalid email)"
+      x-swagger-router-controller: Default
+  /users:
+    get:
+      summary: Get all users
+      description: Returns a list of all registered users.
+      operationId: usersGET
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal server error
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Default
+  /users/{id}:
+    get:
+      summary: Get a user by ID
+      description: Returns a single user by their ID.
+      operationId: usersIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        "404":
+          description: User not found
+        "400":
+          description: "Bad request (e.g., invalid ID format)"
+        "401":
+          description: Unauthorized
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Default
+    put:
+      summary: Update a user by ID
+      description: Updates user details by their ID.
+      operationId: usersIdPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        "200":
+          description: User updated successfully
+        "404":
+          description: User not found
+        "400":
+          description: "Bad request (e.g., invalid fields or ID)"
+        "401":
+          description: Unauthorized
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Default
+    delete:
+      summary: Delete a user by ID
+      description: Deletes a user from the system by their ID.
+      operationId: usersIdDELETE
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+      responses:
+        "204":
+          description: User deleted successfully
+        "404":
+          description: User not found
+        "400":
+          description: "Bad request (e.g., invalid ID format)"
+        "401":
+          description: Unauthorized
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Default
+    patch:
+      summary: Partially update a user by ID
+      description: Updates one or more user attributes by their ID.
+      operationId: usersIdPATCH
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+        required: true
+      responses:
+        "200":
+          description: User updated successfully
+        "404":
+          description: User not found
+        "400":
+          description: "Bad request (e.g., invalid fields or ID)"
+        "401":
+          description: Unauthorized
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Default
+components:
+  schemas:
+    User:
+      required:
+      - email
+      - password
+      - username
+      type: object
+      properties:
+        id:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        password:
+          type: string
+          format: password
+          example: strongpassword123
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        role:
+          type: string
+          example: user
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 60a7842f58d6c90d58f4e2b6
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        role:
+          type: string
+          example: user
+      example:
+        firstName: John
+        lastName: Doe
+        role: user
+        id: 60a7842f58d6c90d58f4e2b6
+        email: johndoe@example.com
+        username: johndoe
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe_updated
+        email:
+          type: string
+          format: email
+          example: johndoe_updated@example.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+    LoginRequest:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: strongpassword123
+    RegisterRequest:
+      required:
+      - email
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        password:
+          type: string
+          format: password
+          example: strongpassword123
+    inline_response_200:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      example:
+        token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    auth_password_body:
+      required:
+      - email
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
