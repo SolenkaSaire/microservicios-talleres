@@ -83,6 +83,12 @@ components:
                 username:
                     type: string
                     example: johndoe
+                apellido:
+                    type: string
+                    example: doe
+                nombre:
+                    type: string
+                    example: john
                 email:
                     type: string
                     format: email
