@@ -5,6 +5,8 @@ const router = express.Router();
 
 router.get('/', authMiddleware, userController.getAllUsers);
 router.get('/:id', authMiddleware, userController.getUserById);
-// Implementa las rutas updateUser y deleteUser con sus métodos correspondientes
+router.put('/:id', authMiddleware, userController.updateUserById);
+router.delete('/:id', authMiddleware, userController.deleteUserById);
+router.patch('/:id', authMiddleware, userController.partialUpdateUserById);
 
 module.exports = router;

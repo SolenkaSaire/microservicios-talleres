@@ -35,7 +35,7 @@ exports.login = async ({ email, password }) => {
     return { token };
 };
 
-exports.recoverPassword = async ({ email }) => {
+/* exports.recoverPassword = async ({ email }) => {
     const user = await User.findOne({ email });
     if (!user) {
         throw new Error('User not found');
@@ -68,6 +68,19 @@ exports.recoverPassword = async ({ email }) => {
     await transporter.sendMail(mailOptions);
 
     return { message: 'Password recovery email sent' };
+}; */
+
+exports.recoverPassword = async ({ email }) => {
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+    });
+
+    return { resetToken };
 };
 
 exports.resetPassword = async ({ token, newPassword }) => {

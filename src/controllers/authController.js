@@ -3,12 +3,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
 
+
 // Controlador para la recuperación de contraseña
 exports.recoverPassword = async (req, res) => {
     try {
         const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
         const response = await authService.recoverPassword({ email });
-        res.json(response);
+        if (!response) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'Password recovery email sent' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
@@ -19,8 +28,16 @@ exports.recoverPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
     try {
         const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: 'Token and new password are required' });
+        }
+
         const response = await authService.resetPassword({ token, newPassword });
-        res.json(response);
+        if (!response) {
+            return res.status(400).json({ message: 'Invalid token or password' });
+        }
+
+        res.status(200).json({ message: 'Password reset successfully' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
@@ -31,6 +48,27 @@ exports.resetPassword = async (req, res) => {
 exports.register = async (req, res) => {
     try {
         const { nombre, apellido, username, email, password } = req.body;
+
+        message = '';
+        // Validación de campos requeridos acumular el message
+        if (!nombre) {
+            message += 'El campo nombre es requerido, ';
+        }
+        if (!apellido) {
+            message += 'El campo apellido es requerido, ';
+        }   
+        if (!username) {
+            message += 'El campo username es requerido, ';
+        }   
+        if (!email) {
+            message += 'El campo email es requerido, ';
+        }
+        if (!password) {
+            message += 'El campo password es requerido, ';
+        }
+        if (message) {
+            return res.status(400).json({ message });
+        }
 
         // Verifica si el usuario ya existe
         let user = await User.findOne({ email });
@@ -54,7 +92,7 @@ exports.register = async (req, res) => {
         // Guarda el usuario en la base de datos
         await user.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'User registered successfully', userId: user._id });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
@@ -65,6 +103,10 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
 
         const user = await User.findOne({ email });
         if (!user) {
@@ -80,26 +122,7 @@ exports.login = async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.json({ token });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-// Controlador para la recuperación de contraseña
-exports.recoverPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: 'User not found' });
-        }
-
-        // Aquí puedes implementar la lógica para enviar un correo de recuperación de contraseña
-
-        res.json({ message: 'Password recovery email sent' });
+        res.status(200).json({ token });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
