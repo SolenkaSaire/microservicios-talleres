@@ -3,46 +3,22 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
 
-
-// Controlador para la recuperación de contraseña
+// Controlador para actualizar la contraseña
 exports.recoverPassword = async (req, res) => {
     try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ message: 'Email is required' });
+        const { email, newPassword } = req.body;
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: 'Email and new password are required' });
         }
 
-        const response = await authService.recoverPassword({ email });
-        if (!response) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json({ message: 'Password recovery email sent' });
+        const response = await authService.updatePassword({ email, newPassword });
+        res.status(200).json(response);
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// Controlador para restablecer la contraseña
-exports.resetPassword = async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
-        if (!token || !newPassword) {
-            return res.status(400).json({ message: 'Token and new password are required' });
-        }
-
-        const response = await authService.resetPassword({ token, newPassword });
-        if (!response) {
-            return res.status(400).json({ message: 'Invalid token or password' });
-        }
-
-        res.status(200).json({ message: 'Password reset successfully' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
 
 // Controlador para el registro de usuario
 exports.register = async (req, res) => {
@@ -118,7 +94,7 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
 

@@ -47,7 +47,8 @@ exports.updateUserById = async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'Invalid ID format' });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: err.message });
+        
     }
 };
 

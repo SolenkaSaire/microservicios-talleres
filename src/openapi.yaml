@@ -102,6 +102,21 @@ components:
                 - email
                 - password
 
+        RecoverPasswordRequest:
+            type: object
+            properties:
+                email:
+                    type: string
+                    format: email
+                    example: user@example.com
+                newPassword:
+                    type: string
+                    format: password
+                    example: newstrongpassword123
+            required:
+                - email
+                - newPassword
+
 paths:
     /auth/login:
         post:
@@ -130,7 +145,7 @@ paths:
                 "400":
                     description: Bad request (e.g., missing email or password)
 
-    /auth/register:
+    /auth/:
         post:
             summary: User registration
             description: Registers a new user in the system.
@@ -153,29 +168,22 @@ paths:
                     description: Email or username already exists
 
     /auth/password:
-        post:
-            summary: Password recovery
-            description: Sends a password recovery email to the user.
+        put:
+            summary: Recover and reset password
+            description: Validates the user's email and updates the password.
             requestBody:
                 required: true
                 content:
                     application/json:
                         schema:
-                            type: object
-                            properties:
-                                email:
-                                    type: string
-                                    format: email
-                                    example: user@example.com
-                            required:
-                                - email
+                            $ref: "#/components/schemas/RecoverPasswordRequest"
             responses:
                 "200":
-                    description: Recovery email sent
+                    description: Password has been updated
                 "404":
                     description: User not found
                 "400":
-                    description: Bad request (e.g., missing or invalid email)
+                    description: Bad request (e.g., missing or invalid email or password)
 
     /users:
         get:
@@ -199,8 +207,8 @@ paths:
 
     /users/{id}:
         get:
-            summary: Get a user by ID
-            description: Returns a single user by their ID.
+            summary: Get the authenticated user's details
+            description: Returns the details of the authenticated user.
             security:
                 - bearerAuth: []
             parameters:
@@ -225,8 +233,8 @@ paths:
                     description: Unauthorized
 
         put:
-            summary: Update a user by ID
-            description: Updates user details by their ID.
+            summary: Update the authenticated user's details
+            description: Updates the details of the authenticated user.
             security:
                 - bearerAuth: []
             parameters:
@@ -253,8 +261,8 @@ paths:
                     description: Unauthorized
 
         patch:
-            summary: Partially update a user by ID
-            description: Updates one or more user attributes by their ID.
+            summary: Partially update the authenticated user's details
+            description: Updates one or more attributes of the authenticated user.
             security:
                 - bearerAuth: []
             parameters:
@@ -281,8 +289,8 @@ paths:
                     description: Unauthorized
 
         delete:
-            summary: Delete a user by ID
-            description: Deletes a user from the system by their ID.
+            summary: Delete the authenticated user's account
+            description: Deletes the authenticated user from the system.
             security:
                 - bearerAuth: []
             parameters:

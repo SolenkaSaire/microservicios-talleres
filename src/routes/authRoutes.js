@@ -3,20 +3,16 @@ const {
     register,
     login,
     recoverPassword,
-    resetPassword,
 } = require("../controllers/authController");
 const router = express.Router();
 
 // Ruta de registro
-router.post("/register", register);
+router.post("/", register);
 
 // Ruta de inicio de sesión
 router.post("/login", login);
 
 // Ruta de recuperación de contraseña
-router.post("/password", recoverPassword);
-
-// Ruta para restablecer la contraseña
-router.post("/reset-password", resetPassword);
+router.put("/password", recoverPassword);
 
 module.exports = router;

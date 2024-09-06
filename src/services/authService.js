@@ -70,33 +70,15 @@ exports.login = async ({ email, password }) => {
     return { message: 'Password recovery email sent' };
 }; */
 
-exports.recoverPassword = async ({ email }) => {
+exports.updatePassword = async ({ email, newPassword }) => {
     const user = await User.findOne({ email });
     if (!user) {
         throw new Error('User not found');
     }
 
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-    });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
 
-    return { resetToken };
-};
-
-exports.resetPassword = async ({ token, newPassword }) => {
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (!user) {
-            throw new Error('Invalid token');
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        await user.save();
-
-        return { message: 'Password has been reset' };
-    } catch (err) {
-        throw new Error('Invalid or expired token');
-    }
+    return { message: 'Password has been updated' };
 };
