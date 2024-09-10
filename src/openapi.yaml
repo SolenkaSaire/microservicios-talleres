@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
     title: User Taller API
     version: 1.0.0
-    description: API for managing users, including registration, login, and CRUD operations.
+    description: API for managing users, including registration, login, password recovery, and CRUD operations.
 
 servers:
     - url: http://localhost:3000/api
@@ -21,21 +21,21 @@ components:
                 id:
                     type: string
                     example: 60a7842f58d6c90d58f4e2b6
+                nombre:
+                    type: string
+                    example: John
+                apellido:
+                    type: string
+                    example: Doe
                 username:
                     type: string
-                    example: johndoe
+                    example: johndoe123
                 email:
                     type: string
-                    format: email
-                    example: johndoe@example.com
+                    example: john@example.com
                 password:
                     type: string
-                    format: password
-                    example: strongpassword123
-            required:
-                - username
-                - email
-                - password
+                    example: "hashed_password"
 
         UserResponse:
             type: object
@@ -43,79 +43,73 @@ components:
                 id:
                     type: string
                     example: 60a7842f58d6c90d58f4e2b6
+                nombre:
+                    type: string
+                    example: John
+                apellido:
+                    type: string
+                    example: Doe
                 username:
                     type: string
-                    example: johndoe
+                    example: johndoe123
                 email:
                     type: string
-                    format: email
-                    example: johndoe@example.com
+                    example: john@example.com
 
         UserUpdate:
             type: object
             properties:
+                nombre:
+                    type: string
+                    example: John
+                apellido:
+                    type: string
+                    example: Doe
                 username:
                     type: string
-                    example: johndoe_updated
+                    example: johndoe123
                 email:
                     type: string
-                    format: email
-                    example: johndoe_updated@example.com
+                    example: john@example.com
 
         LoginRequest:
             type: object
             properties:
                 email:
                     type: string
-                    format: email
-                    example: user@example.com
+                    example: john@example.com
                 password:
                     type: string
-                    format: password
-                    example: strongpassword123
-            required:
-                - email
-                - password
+                    example: "secure_password"
 
         RegisterRequest:
             type: object
             properties:
-                username:
-                    type: string
-                    example: johndoe
-                apellido:
-                    type: string
-                    example: doe
                 nombre:
                     type: string
-                    example: john
+                    example: John
+                apellido:
+                    type: string
+                    example: Doe
+                username:
+                    type: string
+                    example: johndoe123
                 email:
                     type: string
-                    format: email
-                    example: johndoe@example.com
+                    example: john@example.com
                 password:
                     type: string
-                    format: password
-                    example: strongpassword123
-            required:
-                - username
-                - email
-                - password
+                    example: "secure_password"
 
         RecoverPasswordRequest:
             type: object
             properties:
                 email:
                     type: string
-                    format: email
-                    example: user@example.com
+                    example: john@example.com
                 newPassword:
                     type: string
-                    format: password
-                    example: newstrongpassword123
-            required:
-                - email
-                - newPassword
+                    example: "new_secure_password"
 
 paths:
     /auth/login:
@@ -129,8 +123,8 @@ paths:
                         schema:
                             $ref: "#/components/schemas/LoginRequest"
             responses:
-                "200":
-                    description: Successful login
+                200:
+                    description: Login successful, JWT token returned.
                     content:
                         application/json:
                             schema:
@@ -138,12 +132,27 @@ paths:
                                 properties:
                                     token:
                                         type: string
-                                        description: JWT token
-                                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                "401":
-                    description: Invalid credentials
-                "400":
-                    description: Bad request (e.g., missing email or password)
+                                        example: "jwt_token"
+                400:
+                    description: Invalid credentials or missing fields.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Invalid credentials"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
     /auth/:
         post:
@@ -156,16 +165,49 @@ paths:
                         schema:
                             $ref: "#/components/schemas/RegisterRequest"
             responses:
-                "201":
-                    description: User created successfully
+                201:
+                    description: User registered successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/UserResponse"
-                "400":
-                    description: Bad request (e.g., missing or invalid fields)
-                "409":
-                    description: Email or username already exists
+                                type: object
+                                properties:
+                                    userId:
+                                        type: string
+                                        example: "60a7842f58d6c90d58f4e2b6"
+                                    message:
+                                        type: string
+                                        example: "User registered successfully"
+                400:
+                    description: Missing fields or invalid data.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Email and password are required"
+                409:
+                    description: Conflict, email or username already exists.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Email or username already exists"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
     /auth/password:
         put:
@@ -178,12 +220,36 @@ paths:
                         schema:
                             $ref: "#/components/schemas/RecoverPasswordRequest"
             responses:
-                "200":
-                    description: Password has been updated
-                "404":
-                    description: User not found
-                "400":
-                    description: Bad request (e.g., missing or invalid email or password)
+                200:
+                    description: Password updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Password updated successfully"
+                400:
+                    description: Missing fields or invalid email.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Email and new password are required"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
     /users:
         get:
@@ -192,18 +258,34 @@ paths:
             security:
                 - bearerAuth: []
             responses:
-                "200":
-                    description: A list of users
+                200:
+                    description: List of users returned.
                     content:
                         application/json:
                             schema:
                                 type: array
                                 items:
                                     $ref: "#/components/schemas/UserResponse"
-                "401":
-                    description: Unauthorized
-                "500":
-                    description: Internal server error
+                404:
+                    description: No users found.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "No users found"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
     /users/{id}:
         get:
@@ -219,18 +301,52 @@ paths:
                       type: string
                       example: 60a7842f58d6c90d58f4e2b6
             responses:
-                "200":
-                    description: User found
+                200:
+                    description: User details returned successfully.
                     content:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/UserResponse"
-                "404":
-                    description: User not found
-                "400":
-                    description: Bad request (e.g., invalid ID format)
-                "401":
-                    description: Unauthorized
+                400:
+                    description: Invalid ID format.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Invalid ID format"
+                403:
+                    description: Unauthorized to access this resource.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Unauthorized"
+                404:
+                    description: User not found.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "User not found"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
         put:
             summary: Update the authenticated user's details
@@ -249,16 +365,54 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/User"
+                            $ref: "#/components/schemas/UserUpdate"
             responses:
-                "200":
-                    description: User updated successfully
-                "404":
-                    description: User not found
-                "400":
-                    description: Bad request (e.g., invalid fields or ID)
-                "401":
-                    description: Unauthorized
+                200:
+                    description: User updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserResponse"
+                400:
+                    description: Invalid ID format or missing fields.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Invalid ID format or missing fields"
+                403:
+                    description: Unauthorized to update this resource.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Unauthorized"
+                404:
+                    description: User not found.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "User not found"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
         patch:
             summary: Partially update the authenticated user's details
@@ -279,14 +433,52 @@ paths:
                         schema:
                             $ref: "#/components/schemas/UserUpdate"
             responses:
-                "200":
-                    description: User updated successfully
-                "404":
-                    description: User not found
-                "400":
-                    description: Bad request (e.g., invalid fields or ID)
-                "401":
-                    description: Unauthorized
+                200:
+                    description: User updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserResponse"
+                400:
+                    description: Invalid ID format or missing fields.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Invalid ID format or missing fields"
+                403:
+                    description: Unauthorized to update this resource.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Unauthorized"
+                404:
+                    description: User not found.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "User not found"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"
 
         delete:
             summary: Delete the authenticated user's account
@@ -301,11 +493,45 @@ paths:
                       type: string
                       example: 60a7842f58d6c90d58f4e2b6
             responses:
-                "204":
-                    description: User deleted successfully
-                "404":
-                    description: User not found
-                "400":
-                    description: Bad request (e.g., invalid ID format)
-                "401":
-                    description: Unauthorized
+                204:
+                    description: User deleted successfully, no content returned.
+                400:
+                    description: Invalid ID format.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Invalid ID format"
+                403:
+                    description: Unauthorized to delete this resource.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Unauthorized"
+                404:
+                    description: User not found.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "User not found"
+                500:
+                    description: Server error.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Server error"

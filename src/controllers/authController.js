@@ -7,15 +7,21 @@ const authService = require('../services/authService');
 exports.recoverPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
+
         if (!email || !newPassword) {
-            return res.status(400).json({ message: 'Email and new password are required' });
+            return res.status(400).json({ message: 'Email y nueva contraseña son requeridos' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
         const response = await authService.updatePassword({ email, newPassword });
         res.status(200).json(response);
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error del servidor al recuperar la contraseña' });
     }
 };
 
@@ -24,54 +30,30 @@ exports.recoverPassword = async (req, res) => {
 exports.register = async (req, res) => {
     try {
         const { nombre, apellido, username, email, password } = req.body;
+        let message = '';
 
-        message = '';
-        // Validación de campos requeridos acumular el message
-        if (!nombre) {
-            message += 'El campo nombre es requerido, ';
-        }
-        if (!apellido) {
-            message += 'El campo apellido es requerido, ';
-        }   
-        if (!username) {
-            message += 'El campo username es requerido, ';
-        }   
-        if (!email) {
-            message += 'El campo email es requerido, ';
-        }
-        if (!password) {
-            message += 'El campo password es requerido, ';
-        }
-        if (message) {
-            return res.status(400).json({ message });
-        }
+        if (!nombre) message += 'El campo nombre es requerido, ';
+        if (!apellido) message += 'El campo apellido es requerido, ';
+        if (!username) message += 'El campo username es requerido, ';
+        if (!email) message += 'El campo email es requerido, ';
+        if (!password) message += 'El campo password es requerido, ';
+        if (message) return res.status(400).json({ message: message.slice(0, -2) });
 
-        // Verifica si el usuario ya existe
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ $or: [{ email }, { username }] });
         if (user) {
-            return res.status(409).json({ message: 'Email or username already exists' });
+            return res.status(409).json({ message: 'El email o username ya existen' });
         }
 
-        // Crea un nuevo usuario
-        user = new User({
-            nombre,
-            apellido,
-            username,
-            email,
-            password
-        });
+        user = new User({ nombre, apellido, username, email, password });
 
-        // Hash de la contraseña antes de guardar
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
-
-        // Guarda el usuario en la base de datos
         await user.save();
 
-        res.status(201).json({ message: 'User registered successfully', userId: user._id });
+        res.status(201).json({ message: 'Usuario registrado exitosamente', userId: user._id });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error del servidor al registrar usuario' });
     }
 };
 
@@ -81,26 +63,23 @@ exports.login = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
+            return res.status(400).json({ message: 'Email y contraseña son requeridos' });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
-        });
-
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error del servidor al iniciar sesión' });
     }
 };
