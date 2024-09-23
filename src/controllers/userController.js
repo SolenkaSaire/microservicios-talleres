@@ -122,6 +122,18 @@ exports.deleteUserById = async (req, res) => {
     }
 };
 
+// Eliminar todos los usuarios
+exports.deleteAllUsers = async (req, res) => {
+    try {
+        await User.deleteMany({});
+        res.status(200).json({ message: "Todos los usuarios han sido eliminados exitosamente" });
+    } catch (err) {
+        res.status(500).json({
+            message: "Error del servidor al eliminar todos los usuarios",
+        });
+    }
+};
+
 // Actualización parcial de usuario
 exports.partialUpdateUserById = async (req, res) => {
     try {

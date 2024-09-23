@@ -17,8 +17,8 @@ exports.recoverPassword = async (req, res) => {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
-        const response = await authService.updatePassword({ email, newPassword });
-        res.status(200).json(response);
+        await authService.updatePassword({ email, newPassword });
+        res.status(200).json({ message: 'Contraseña actualizada exitosamente' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Error del servidor al recuperar la contraseña' });

@@ -58,6 +58,11 @@ exports.deleteUserById = async (id) => {
     return await User.findByIdAndDelete(id);
 };
 
+// Delete all users
+exports.deleteAllUsers = async () => {
+    return await User.deleteMany({});
+};
+
 // Partially update user by ID
 exports.partialUpdateUserById = async (id, userData) => {
     return await User.findByIdAndUpdate(id, { $set: userData }, { new: true });
