@@ -5,13 +5,34 @@ const bcrypt = require("bcryptjs");
 // Obtener todos los usuarios
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
-        if (!users || users.length === 0) {
+        const {
+            page = parseInt(req.query.page, 10) || 1,
+            limit = parseInt(req.query.limit, 10) || 10,
+        } = req.query; // Paginación: página y límite por defecto
+
+        // Calcular el número de elementos a saltar
+        const skip = (page - 1) * limit;
+
+        // Buscar usuarios con paginación
+        const users = await User.find().skip(skip).limit(parseInt(limit));
+
+        // Obtener el total de usuarios
+        const totalUsers = await User.countDocuments();
+
+        // verificar si no hay usuarios
+        if (users.length === 0) {
             return res
                 .status(404)
                 .json({ message: "No se encontraron usuarios" });
         }
-        res.status(200).json(users);
+
+        res.status(200).json({
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(totalUsers / limit),
+            totalUsers,
+            users,
+        });
     } catch (err) {
         res.status(500).json({
             message: "Error del servidor al obtener usuarios",
@@ -23,11 +44,9 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     try {
         if (req.user.id !== req.params.id) {
-            return res
-                .status(403)
-                .json({
-                    message: "No autorizado para acceder a esta información",
-                });
+            return res.status(403).json({
+                message: "No autorizado para acceder a esta información",
+            });
         }
 
         const user = await User.findById(req.params.id);
@@ -50,20 +69,16 @@ exports.updateUserById = async (req, res) => {
     try {
         // Verificar si el usuario está autorizado para actualizar su información
         if (req.user.id !== req.params.id) {
-            return res
-                .status(403)
-                .json({
-                    message: "No autorizado para actualizar esta información",
-                });
+            return res.status(403).json({
+                message: "No autorizado para actualizar esta información",
+            });
         }
 
         // Verificar si el cuerpo de la solicitud está vacío
         if (Object.keys(req.body).length === 0) {
-            return res
-                .status(400)
-                .json({
-                    message: "El cuerpo de la solicitud no puede estar vacío",
-                });
+            return res.status(400).json({
+                message: "El cuerpo de la solicitud no puede estar vacío",
+            });
         }
 
         // Buscar el usuario en la base de datos
@@ -126,7 +141,9 @@ exports.deleteUserById = async (req, res) => {
 exports.deleteAllUsers = async (req, res) => {
     try {
         await User.deleteMany({});
-        res.status(200).json({ message: "Todos los usuarios han sido eliminados exitosamente" });
+        res.status(200).json({
+            message: "Todos los usuarios han sido eliminados exitosamente",
+        });
     } catch (err) {
         res.status(500).json({
             message: "Error del servidor al eliminar todos los usuarios",
@@ -138,19 +155,15 @@ exports.deleteAllUsers = async (req, res) => {
 exports.partialUpdateUserById = async (req, res) => {
     try {
         if (req.user.id !== req.params.id) {
-            return res
-                .status(403)
-                .json({
-                    message: "No autorizado para actualizar esta información",
-                });
+            return res.status(403).json({
+                message: "No autorizado para actualizar esta información",
+            });
         }
 
         if (Object.keys(req.body).length === 0) {
-            return res
-                .status(400)
-                .json({
-                    message: "El cuerpo de la solicitud no puede estar vacío",
-                });
+            return res.status(400).json({
+                message: "El cuerpo de la solicitud no puede estar vacío",
+            });
         }
 
         const updatedUser = await User.findByIdAndUpdate(

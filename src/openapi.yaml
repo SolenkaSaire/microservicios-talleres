@@ -255,6 +255,19 @@ paths:
         get:
             summary: Get all users
             description: Returns a list of all registered users.
+            parameters:
+                - name: page
+                  in: query
+                  description: Número de página para la paginación
+                  schema:
+                      type: integer
+                      example: 2
+                - name: limit
+                  in: query
+                  description: Número de elementos por página
+                  schema:
+                      type: integer
+                      example: 10
             security:
                 - bearerAuth: []
             responses:
