@@ -1,0 +1,31 @@
+# Usa la imagen base de OpenJDK 17 en Debian
+FROM openjdk:17-slim
+
+# Cambiar a usuario root para poder instalar paquetes
+USER root
+
+# Actualiza el sistema e instala Git, wget y unzip
+RUN apt-get update && \
+    apt-get install -y git wget unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Crear el directorio de Jenkins
+RUN mkdir -p /usr/share/jenkins
+
+# Descargar Jenkins WAR y verificar si se descarga correctamente
+RUN wget -O /usr/share/jenkins/jenkins.war http://mirrors.jenkins.io/war-stable/latest/jenkins.war && \
+    ls -l /usr/share/jenkins/jenkins.war
+
+# Instalar Allure
+RUN wget https://github.com/allure-framework/allure2/releases/download/2.21.0/allure-2.21.0.zip -O /tmp/allure.zip && \
+    unzip /tmp/allure.zip -d /opt/allure && \
+    ln -s /opt/allure/bin/allure /usr/bin/allure
+
+# Exponer el puerto 8080 para Jenkins
+EXPOSE 8080
+
+# Comando para iniciar Jenkins
+CMD ["java", "-jar", "/usr/share/jenkins/jenkins.war"]

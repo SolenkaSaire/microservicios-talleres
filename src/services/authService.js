@@ -13,7 +13,6 @@ exports.register = async (userData) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ nombre, apellido, username, email, password: hashedPassword });
-
     return user.save();
 };
 
@@ -31,7 +30,6 @@ exports.login = async ({ email, password }) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1h',
     });
-
     return { token };
 };
 
@@ -79,6 +77,6 @@ exports.updatePassword = async ({ email, newPassword }) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
-
+    console.log("Password updated successfully")
     return { message: 'Password has been updated' };
 };

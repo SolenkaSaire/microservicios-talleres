@@ -33,6 +33,9 @@ exports.getAllUsers = async (req, res) => {
             totalUsers,
             users,
         });
+
+        console.log("Users retrieved successfully")
+
     } catch (err) {
         res.status(500).json({
             message: "Error del servidor al obtener usuarios",
@@ -53,6 +56,7 @@ exports.getUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
+        console.log("User retrieved successfully")
         res.status(200).json(user);
     } catch (err) {
         if (err.kind === "ObjectId") {
@@ -103,6 +107,8 @@ exports.updateUserById = async (req, res) => {
         // Guardar los cambios del usuario
         await user.save();
 
+        console.log("User updated successfully")
+
         // Responder con el usuario actualizado
         res.status(200).json(user);
     } catch (err) {
@@ -126,6 +132,9 @@ exports.deleteUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
+
+        console.log("User deleted successfully")
+
         res.status(200).json({ message: "Usuario eliminado exitosamente" });
     } catch (err) {
         if (err.kind === "ObjectId") {
@@ -141,6 +150,9 @@ exports.deleteUserById = async (req, res) => {
 exports.deleteAllUsers = async (req, res) => {
     try {
         await User.deleteMany({});
+
+        console.log("All users deleted successfully")
+
         res.status(200).json({
             message: "Todos los usuarios han sido eliminados exitosamente",
         });

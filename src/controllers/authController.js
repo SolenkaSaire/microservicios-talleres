@@ -49,7 +49,7 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
         await user.save();
-
+        console.log("User created successfully")
         res.status(201).json({ message: 'Usuario registrado exitosamente', userId: user._id });
     } catch (err) {
         console.error(err.message);
@@ -68,14 +68,18 @@ exports.login = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
+            console.log("Failed login attempt: Invalid credentials")
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log("Failed login attempt: Invalid credentials")
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
+        console.log("User logged in successfully")
+        
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (err) {

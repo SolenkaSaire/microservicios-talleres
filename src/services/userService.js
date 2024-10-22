@@ -35,6 +35,7 @@ exports.recoverPassword = async (email) => {
 
     // Store the recovery code in the user's document or send it back to the user
     // For simplicity, let's assume we are just sending it back in the response
+    console.log("Recovery code:", recoveryCode);
     return recoveryCode;
 };
 
