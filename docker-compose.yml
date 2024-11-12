@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile_API
     ports:
       - "3000:3000"
+    networks:
+      - localprom
     environment:
       - PORT=3000
       - NODE_ENV=development
@@ -13,14 +15,29 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - mongo
+    restart: always
 
   mongo:
     image: mongo:5.0
     container_name: mongodb
     ports:
       - "27017:27017"
+    networks:
+      - localprom
     volumes:
       - mongo-data:/data/db
+
+  mongodb-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: mongodb-exporter
+    networks:
+      - localprom
+    environment:
+      - MONGODB_URI=${MONGO_URI}
+    ports:
+      - "9216:9216"  # Puerto para las métricas
+    depends_on:
+      - mongo
 
   jenkins:
     image: jenkins-custom
@@ -30,6 +47,8 @@ services:
     ports:
       - "8080:8080"
       - "50000:50000"
+    networks:
+      - localprom
     volumes:
       - jenkins_home:/var/jenkins_home
     environment:
@@ -39,6 +58,8 @@ services:
     image: grafana/grafana:latest
     ports:
       - "3001:3000"
+    networks:
+      - localprom
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -46,11 +67,14 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
+      - prometheus
 
   loki:
     image: grafana/loki:2.8.0
     ports:
       - "3100:3100"
+    networks:
+      - localprom
     volumes:
       - type: bind
         source: ./src/config/local-config.yaml
@@ -59,6 +83,8 @@ services:
 
   promtail:
     image: grafana/promtail:2.8.0
+    networks:
+      - localprom
     volumes:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers
@@ -69,8 +95,59 @@ services:
     depends_on:
       - loki
 
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - type: bind
+        source: ./src/config/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+      - type: bind
+        source: ./src/config/alert_rules.yml
+        target: /etc/prometheus/alert_rules.yml    
+    networks:
+      - localprom
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      - app
+
+  node-exporter:
+    image: prom/node-exporter
+    networks:
+      - localprom
+    ports:
+      - 9100:9100
+
+  alertmanager:
+    image: prom/alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - type: bind
+        source: ./src/config/alertmanager.yml
+        target: /etc/alertmanager/alertmanager.yml 
+    networks:
+      - localprom
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    depends_on:
+      - prometheus
+
+  python_service:
+    build: 
+      context: ../taller_health/
+      dockerfile: ../taller_health/Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - alertmanager
+    networks:
+      - localprom
+
 networks:
-  spark-network:
+  localprom:
     driver: bridge
 
 volumes:
