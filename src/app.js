@@ -20,7 +20,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Definir una ruta para la raíz
 app.get('/', (req, res) => {
-  res.send('Bienvenido a la API del taller!');
+  res.send('Bienvenido a la API del taller de gestión de usuarios!');
 });
 
 // Rutas

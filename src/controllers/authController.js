@@ -2,6 +2,8 @@ const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
+const { publishMessage } = require('../services/messageService');
+
 
 // Controlador para actualizar la contraseña
 exports.recoverPassword = async (req, res) => {
@@ -49,6 +51,10 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
         await user.save();
+
+        // Enviar evento de creación de usuario
+        await publishMessage({ action: 'USER_CREATED', userId: user._id });
+
         console.log("User created successfully")
         res.status(201).json({ message: 'Usuario registrado exitosamente', userId: user._id });
     } catch (err) {

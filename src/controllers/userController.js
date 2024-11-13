@@ -1,6 +1,8 @@
 const User = require("../models/userModel");
 const userService = require("../services/userService");
 const bcrypt = require("bcryptjs");
+const { publishMessage } = require('../services/messageService');
+
 
 // Obtener todos los usuarios
 exports.getAllUsers = async (req, res) => {
@@ -133,7 +135,8 @@ exports.deleteUserById = async (req, res) => {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
 
-        console.log("User deleted successfully")
+        console.log("User deleted successfully");
+        await publishMessage({ action: 'USER_DELETED', userId: user._id.toString() });
 
         res.status(200).json({ message: "Usuario eliminado exitosamente" });
     } catch (err) {

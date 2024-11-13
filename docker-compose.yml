@@ -11,8 +11,13 @@ services:
       - NODE_ENV=development
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
     depends_on:
       - mongo
+      - rabbitmq
+    networks:
+      - app-network
 
   mongo:
     image: mongo:5.0
@@ -21,6 +26,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    networks:
+      - app-network
 
   jenkins:
     image: jenkins-custom
@@ -34,6 +41,8 @@ services:
       - jenkins_home:/var/jenkins_home
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - app-network
 
   grafana:
     image: grafana/grafana:latest
@@ -46,6 +55,8 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
+    networks:
+      - app-network
 
   loki:
     image: grafana/loki:2.8.0
@@ -68,9 +79,49 @@ services:
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
+    networks:
+      - app-network
+
+  # Microservicio 2
+  app-go:
+    build:
+      context: ../gestion-perfil  # Asume que el Dockerfile del micro 2 está en la carpeta ./micro2
+      dockerfile: Dockerfile_profile
+    container_name: app-go
+    depends_on:
+      - rabbitmq
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_URI=amqp://admin:admin@rabbitmq:5672/
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+
+  # Servicio de RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  
+      - "15672:15672"  
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
 
 networks:
-  spark-network:
+  app-network:
     driver: bridge
 
 volumes:

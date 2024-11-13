@@ -13,6 +13,7 @@ exports.register = async (userData) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ nombre, apellido, username, email, password: hashedPassword });
+
     return user.save();
 };
 
