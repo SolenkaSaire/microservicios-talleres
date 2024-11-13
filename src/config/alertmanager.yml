@@ -1,0 +1,10 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'python-webhook'
+
+receivers:
+- name: 'python-webhook'
+  webhook_configs:
+  - url: 'http://microservicios-talleres-python_service-1:5000/alert'
